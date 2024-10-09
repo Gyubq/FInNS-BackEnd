@@ -26,7 +26,7 @@ import java.util.List;
 @Slf4j
 @Api(value = "BoardController", tags = "게시판 정보")
 @PropertySource({"classpath:/application.properties"})
-public class BoardController {
+public class SSSSBoardController {
 
     @Value("#{'${os_type}' == 'win' ? '${file_save_location_win}/board':'${file_save_location_other}/board'}")
     public String BASE_DIR;

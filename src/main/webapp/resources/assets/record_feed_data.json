@@ -1,0 +1,56 @@
+# 다시 SQL 파일 생성 시도
+import pandas as pd
+import random
+from datetime import datetime, timedelta
+
+# 설정
+num_users = 10
+records_per_user_per_day = 10
+num_days = 10
+total_records = num_users * records_per_user_per_day * num_days
+
+# 예시 카테고리 및 장소
+categories = ['식비', '교통', '미용', '교육', '쇼핑', '문화 · 여행', '술 · 유흥']
+places = ['레스토랑', '지하철', '미용실', '학원', '백화점', '여행지', '바', '영화관']
+
+# 데이터 생성
+data = []
+start_date = datetime(2024, 10, 6)  # 시작 날짜
+for user_no in range(1, num_users + 1):
+    for day in range(num_days):
+        for record_no in range(1, records_per_user_per_day + 1):
+            transaction_date = start_date + timedelta(days=day)
+            record_id = (user_no - 1) * records_per_user_per_day * num_days + (day * records_per_user_per_day) + record_no
+            card_no = random.randint(1, 100)  # 예시 카드 번호
+            amount = random.randint(1000, 100000)  # 임의의 금액
+            memo = f"기타 {record_no}"
+            category = random.choice(categories)
+            place = random.choice(places)
+            public_status = True  # 기본값
+            great_count = random.randint(0, 100)  # 임의의 좋아요 수
+            stupid_count = random.randint(0, 100)  # 임의의 싫어요 수
+            
+            data.append({
+                "record_no": record_id,
+                "user_no": user_no,
+                "card_no": card_no,
+                "public_status": public_status,
+                "category": category,
+                "memo": memo,
+                "amount": amount,
+                "place": place,
+                "transaction_date": transaction_date.strftime('%Y-%m-%d %H:%M:%S'),
+                "great_count": great_count,
+                "stupid_count": stupid_count
+            })
+
+# DataFrame 생성
+df = pd.DataFrame(data)
+
+# SQL INSERT 구문 파일 저장
+file_path = '/mnt/data/generated_record_feed.sql'
+with open(file_path, 'w', encoding='utf-8') as f:
+    for index, row in df.iterrows():
+        f.write(f"INSERT INTO record_feed (record_no, user_no, card_no, public_status, category, memo, amount, place, transaction_date, great_count, stupid_count) VALUES ({row['record_no']}, {row['user_no']}, {row['card_no']}, {str(row['public_status']).lower()}, '{row['category']}', '{row['memo']}', {row['amount']}, '{row['place']}', '{row['transaction_date']}', {row['great_count']}, {row['stupid_count']});\n")
+
+file_path
