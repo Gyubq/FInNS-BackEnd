@@ -2,14 +2,17 @@ package com.finns.post.dto;
 
 import lombok.*;
 
+import java.util.List;
+
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
 @Setter
 @Builder
-public class Post {
+public class PostResponseDTO {
     private long postNo;
     private long userNo;
+    private String userName;
     private long cardNo;
     private boolean publicStatus;
     private String category;
@@ -20,4 +23,5 @@ public class Post {
     private long greatCount;
     private long stupidCount;
     private boolean renewStatus;
+    private List<String> imgUrls;
 }

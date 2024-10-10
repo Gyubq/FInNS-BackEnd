@@ -11,4 +11,5 @@ public interface AmountByCategoryMapper {
 
     // 카테고리와 유저로 금액 업데이트(갱신 시)
     void upsertByCategoryAndUser(UpdateAmountDTO updateAmountDTO);
+
 }

@@ -10,8 +10,8 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
-public class PostRequestDTO {
+public class PostRequestByCategoryDTO {
 	private Long userNo;
-	private LocalDate date;
+	private String category;
 	private Boolean isOnlyPublic;
 }

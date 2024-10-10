@@ -5,41 +5,63 @@
 
 <mapper namespace="com.finns.post.mapper.PostMapper">
 
-    <select id="selectOne" parameterType="long" resultType="com.finns.post.dto.Post">
-        SELECT post_no, user_no, card_no, public_status, category, memo, amount, place, transaction_date, great_count, stupid_count, renew_status
-        FROM post
-        WHERE post_no = #{no}
+    <select id="selectOne" parameterType="long" resultType="com.finns.post.dto.PostResponseDTO">
+        SELECT DISTINCT
+            p.post_no, p.user_no, p.card_no, p.public_status, p.category, p.memo, p.amount, p.place, p.transaction_date,
+            p.great_count, p.stupid_count, p.renew_status, u.username
+        FROM post p
+        LEFT JOIN user u ON p.user_no = u.user_no
+        WHERE p.post_no = #{no}
     </select>
 
-    <select id="selectAllByUserAndDateAndIsPublic" parameterType="com.finns.post.dto.PostRequestDTO" resultType="com.finns.post.dto.Post">
-        SELECT post_no, user_no, card_no, public_status, category, memo, amount, place, transaction_date, great_count, stupid_count, renew_status
-        FROM post
-        WHERE user_no = #{userNo}
-            AND DATE(transaction_date) = #{date}
-            AND renew_status = true
+    <select id="selectAllByUserAndDateAndIsPublic" parameterType="com.finns.post.dto.PostRequestByDateDTO" resultType="com.finns.post.dto.PostResponseDTO">
+        SELECT
+        p.post_no, p.user_no, p.card_no, p.public_status, p.category, p.memo, p.amount, p.place, p.transaction_date, p.great_count, p.stupid_count, p.renew_status, u.username
+        FROM post p
+        LEFT JOIN user u ON p.user_no = u.user_no
+        WHERE p.user_no = #{userNo}
+        AND DATE(p.transaction_date) = #{date}
+        AND p.renew_status = true
 
-            <!-- isOnlyPublic가 true이면 공개된 소비내역만 끌고 옴 -->
-            <if test="isOnlyPublic">
-                AND public_status = true
-            </if>
+        <!-- isOnlyPublic가 true이면 공개된 소비내역만 끌고 옴 -->
+        <if test="isOnlyPublic">
+            AND p.public_status = true
+        </if>
+        ORDER BY p.transaction_date ASC
+    </select>
+
+    <select id="selectAllByUserAndCategoryAndIsPublic" parameterType="com.finns.post.dto.PostRequestByCategoryDTO" resultType="com.finns.post.dto.PostResponseDTO">
+        SELECT
+        p.post_no, p.user_no, p.card_no, p.public_status, p.category, p.memo, p.amount, p.place, p.transaction_date, p.great_count, p.stupid_count, p.renew_status, u.username
+        FROM post p
+        LEFT JOIN user u ON p.user_no = u.user_no
+        WHERE p.user_no = #{userNo}
+        AND p.category = #{category}
+        AND p.renew_status = true
+
+        <!-- isOnlyPublic가 true이면 공개된 소비내역만 끌고 옴 -->
+        <if test="isOnlyPublic">
+            AND p.public_status = true
+        </if>
+        ORDER BY p.transaction_date ASC
     </select>
 
     <update id="updateRenewStatusByUser" parameterType="com.finns.post.dto.ChangeRenewStatusDTO">
         UPDATE post
         SET renew_status = true
         WHERE user_no = #{userNo}
-            AND renew_status = false
-            AND transaction_date &gt; (SELECT renew_time FROM user WHERE user_no = #{userNo})
-            AND transaction_date &lt;= #{now}
+          AND renew_status = false
+          AND transaction_date &gt; (SELECT renew_time FROM user WHERE user_no = #{userNo})
+          AND transaction_date &lt;= #{now}
     </update>
 
     <select id="selectUpdatedRenewPost" parameterType="com.finns.post.dto.ChangeRenewStatusDTO" resultType="com.finns.post.dto.UpdateAmountDTO">
         SELECT DATE(transaction_date) as transaction_date, category, user_no, amount
         FROM post
         WHERE user_no = #{userNo}
-            AND renew_status = false
-            AND transaction_date &gt; (SELECT renew_time FROM user WHERE user_no = #{userNo})
-            AND transaction_date &lt;= #{now}
+          AND renew_status = false
+          AND transaction_date &gt; (SELECT renew_time FROM user WHERE user_no = #{userNo})
+          AND transaction_date &lt;= #{now}
     </select>
 
     <select id="selectCountByUser" resultType="java.lang.Long">
@@ -57,4 +79,29 @@
 
     <update id="updateCount"></update>
     <update id="updatePost"></update>
+
+    <select id="selectDistinctPostNos" resultType="long">
+        SELECT DISTINCT post_no
+        FROM post_img
+    </select>
+
+    <select id="selectImagesByPostNo" parameterType="long" resultType="string">
+        SELECT img_url
+        FROM post_img
+        WHERE post_no = #{no}
+    </select>
+
+    <!-- 게시글의 great_count를 증가시키는 쿼리 -->
+    <update id="incrementGreatCount" parameterType="long">
+        UPDATE post
+        SET great_count = great_count + 1
+        WHERE post_no = #{postNo}
+    </update>
+
+    <!-- 게시글의 stupid_count를 증가시키는 쿼리 -->
+    <update id="incrementStupidCount" parameterType="long">
+        UPDATE post
+        SET stupid_count = stupid_count + 1
+        WHERE post_no = #{postNo}
+    </update>
 </mapper>

@@ -1,12 +1,10 @@
 package com.finns.post.service;
 
 import com.finns.amountByCategory.mapper.AmountByCategoryMapper;
-import com.finns.post.dto.UpdateAmountDTO;
+import com.finns.post.dto.*;
 import com.finns.amountByDate.mapper.AmountByDateMapper;
-import com.finns.post.dto.ChangeRenewStatusDTO;
-import com.finns.post.dto.Post;
-import com.finns.post.dto.PostRequestDTO;
 import com.finns.post.mapper.PostMapper;
+import com.finns.user.mapper.UserMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.PropertySource;
@@ -27,14 +25,27 @@ public class PostService {
     private final PostMapper postMapper;
     private final AmountByDateMapper amountByDateMapper;
     private final AmountByCategoryMapper amountByCategoryMapper;
+    private final UserMapper userMapper;
 
-    public Post getPost(Long no) {
-        return Optional.ofNullable(postMapper.selectOne(no))
-                        .orElseThrow(NoSuchElementException::new);
+    public PostResponseDTO getPost(Long no) {
+        // 게시글 정보 가져오기
+        PostResponseDTO postResponse = Optional.ofNullable(postMapper.selectOne(no))
+                .orElseThrow(NoSuchElementException::new);
+
+        // 이미지 URL 리스트 가져오기
+        List<String> imgUrls = postMapper.selectImagesByPostNo(no);
+        postResponse.setImgUrls(imgUrls); // 이미지 URL 리스트 설정
+
+        return postResponse;
     }
 
-    public List<Post> getPostsByUserAndDateAndIsPublic(PostRequestDTO postRequestDTO) {
-        return Optional.ofNullable(postMapper.selectAllByUserAndDateAndIsPublic(postRequestDTO))
+    public List<PostResponseDTO> getPostsByUserAndDateAndIsPublic(PostRequestByDateDTO postRequestByDateDTO) {
+        return Optional.ofNullable(postMapper.selectAllByUserAndDateAndIsPublic(postRequestByDateDTO))
+                .orElseThrow(NoSuchElementException::new);
+    }
+
+    public List<PostResponseDTO> getPostsByUserAndCategoryAndIsPublic(PostRequestByCategoryDTO postRequestByCategoryDTO) {
+        return Optional.ofNullable(postMapper.selectAllByUserAndCategoryAndIsPublic(postRequestByCategoryDTO))
                 .orElseThrow(NoSuchElementException::new);
     }
 
@@ -51,6 +62,9 @@ public class PostService {
 
         // 3. renew_status 업데이트
         postMapper.updateRenewStatusByUser(changeRenewStatusDTO);
+
+        // 4. user의 renew_time 업데이트
+        userMapper.updateRenewTime(changeRenewStatusDTO);
     }
 
     public Long getCountByUser(Long userNo) {
@@ -62,5 +76,8 @@ public class PostService {
     public void reversePublicStatus(Long no) {
         postMapper.updatePublicStatus(no);
     }
-
+    // 전체 중복 제거된 post_no 가져오기
+    public List<Long> getDistinctPostNos() {
+        return postMapper.selectDistinctPostNos();
+    }
 }

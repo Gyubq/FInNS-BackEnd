@@ -1,8 +1,9 @@
 package com.finns.post.controller;
 
 import com.finns.post.dto.ChangeRenewStatusDTO;
-import com.finns.post.dto.Post;
-import com.finns.post.dto.PostRequestDTO;
+import com.finns.post.dto.PostRequestByCategoryDTO;
+import com.finns.post.dto.PostRequestByDateDTO;
+import com.finns.post.dto.PostResponseDTO;
 import com.finns.post.service.PostService;
 import io.swagger.annotations.Api;
 import lombok.RequiredArgsConstructor;
@@ -27,14 +28,20 @@ public class PostController {
     private final PostService postService;
 
     @GetMapping("/posts/{no}")
-    public ResponseEntity<Post> postInfo(@PathVariable("no") Long no) {
-        Post post = postService.getPost(no);
+    public ResponseEntity<PostResponseDTO> postInfo(@PathVariable("no") Long no) {
+        PostResponseDTO post = postService.getPost(no);
         return ResponseEntity.ok().body(post);
     }
 
-    @PostMapping("/posts")
-    public ResponseEntity<List<Post>> postsInfoByUserAndDateAndIsPublic(@RequestBody PostRequestDTO postRequestDTO) {
-        List<Post> posts = postService.getPostsByUserAndDateAndIsPublic(postRequestDTO);
+    @PostMapping("/posts/byDate")
+    public ResponseEntity<List<PostResponseDTO>> postsInfoByUserAndDateAndIsPublic(@RequestBody PostRequestByDateDTO postRequestByDateDTO) {
+        List<PostResponseDTO> posts = postService.getPostsByUserAndDateAndIsPublic(postRequestByDateDTO);
+        return ResponseEntity.ok(posts);
+    }
+
+    @PostMapping("/posts/byCategory")
+    public ResponseEntity<List<PostResponseDTO>> postsInfoByUserAndCategoryAndIsPublic(@RequestBody PostRequestByCategoryDTO postRequestByCategoryDTO) {
+        List<PostResponseDTO> posts = postService.getPostsByUserAndCategoryAndIsPublic(postRequestByCategoryDTO);
         return ResponseEntity.ok(posts);
     }
 
@@ -44,10 +51,6 @@ public class PostController {
 
         ChangeRenewStatusDTO changeRenewStatusDTO = new ChangeRenewStatusDTO(userNo, now);
         postService.updateRenewStatusAndAmount(changeRenewStatusDTO);
-
-        // user의 renew_time을 변수 now로 업데이트 해줘야함
-        // user쪽에서 구현해서 userService로 동작시키자!
-
 
         return ResponseEntity.ok().build();
     }
@@ -62,5 +65,11 @@ public class PostController {
     public ResponseEntity<?> togglePublicStatus(@PathVariable("no") Long no) {
         postService.reversePublicStatus(no);
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/posts/images/distinct")
+    public ResponseEntity<List<Long>> getDistinctPostNos() {
+        List<Long> distinctPostNos = postService.getDistinctPostNos();
+        return ResponseEntity.ok(distinctPostNos);
     }
 }
